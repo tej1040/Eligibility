@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eligibility</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #dce6f7, #f1f5ff);
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 1000px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    #searchInput {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #aaa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    /* TILE STYLE (OPTION C) */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 15px;
+    }
+    .tile {
+        background: #eef3ff;
+        border-left: 6px solid #4a68ff;
+        padding: 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .tile:hover {
+        background: #dbe5ff;
+    }
+
+    /* MODAL */
+    #detailModal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+    }
+    #detailBox {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 700px;
+        width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+    }
+    #closeBtn {
+        margin-top: 10px;
+        background: red;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    /* HEADER COLOR INSIDE DETAILS */
+    #detailDesc strong {
+        color: #1a3db1;   /* solid blue */
+        font-size: 17px;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>Eligibility Checker</h1>
+
+    <input type="text" id="searchInput" placeholder="Search payer or eligibility details..." onkeyup="searchEligibility()">
+
+    <div class="grid">
+        <div class="tile" data-key="Medicare">Medicare</div>
+        <div class="tile" data-key="Medicaid">Medicaid</div>
+        <div class="tile" data-key="Tricare">Tricare</div>
+        <div class="tile" data-key="CHAMPVA">CHAMPVA</div>
+        <div class="tile" data-key="Auto">Auto Liability</div>
+        <div class="tile" data-key="WC">Workers' Compensation</div>
+        <div class="tile" data-key="COBRA">COBRA</div>
+        <div class="tile" data-key="BCBS">BCBS</div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div id="detailModal">
+    <div id="detailBox">
+        <h2 id="detailTitle"></h2>
+        <p id="detailDesc" style="white-space: pre-line; line-height: 1.5;"></p>
+        <div id="closeBtn">Close</div>
+    </div>
+</div>
+
+<script>
+const details = {
+
+"Medicare": `
+<strong>Medicare Eligibility:</strong>
+• Age 65 or older
+• Under 65 with disability (24 months SSDI)
+• ESRD – Dialysis or kidney transplant
+• ALS – Automatic Medicare enrollment
+• Must be US citizen or permanent resident (5+ years)
+
+<strong>Medicare Parts:</strong>
+• Part A – Hospital Insurance
+• Part B – Medical/Provider Services
+• Part C – Medicare Advantage
+• Part D – Prescription Drugs
+
+<strong>Verification Notes:</strong>
+• Confirm MBI number
+• Check Part A/B effective dates
+• Verify if Part C replaces A/B billing
+• ESRD requires special eligibility checks
+`,
+
+"Medicaid": `
+<strong>Medicaid Eligibility:</strong>
+• Income-based (varies by state)
+• US citizen or legal resident
+• Pregnant women
+• Children (CHIP)
+• Low-income adults (ACA)
+• Disabled individuals
+
+<strong>Coverage Notes:</strong>
+• Managed Medicaid plans vary by state
+• Retro eligibility may apply up to 90 days
+• Benefits + ID formats differ by state
+
+<strong>Verification:</strong>
+• Always verify on state Medicaid portal
+• Confirm active coverage on DOS
+`,
+
+"Tricare": `
+<strong>Tricare Eligibility:</strong>
+• Active duty military
+• Retired military
+• National Guard/Reserves
+• Spouses & dependents
+
+<strong>Plan Types:</strong>
+• Tricare Prime – HMO style
+• Tricare Select – PPO style
+• Tricare For Life – Secondary to Medicare A/B
+• Tricare East & West – Regional plans
+• Tricare Reserve Select
+• Tricare Young Adult (till 26)
+
+<strong>Verification:</strong>
+• Must check DEERS eligibility
+`,
+
+"CHAMPVA": `
+<strong>CHAMPVA Eligibility:</strong>
+• Spouses & dependents of permanently disabled veterans
+• Not eligible if patient qualifies for TRICARE
+• Medicare A/B required after age 65
+
+<strong>Coverage Notes:</strong>
+• Often acts as secondary payer
+• Some services require VA authorization
+`,
+
+"Auto": `
+<strong>Auto Liability (MVA) Eligibility:</strong>
+
+<strong>Coverage Applies When:</strong>
+• Injury caused by motor vehicle accident
+• Claim number must be verified
+• Adjuster, carrier, and policy must be valid
+
+<strong>Coverage Types:</strong>
+• Med-Pay – Pays regardless of fault
+• PIP – Pays medical + lost wages
+• At-Fault Liability – If insured caused accident
+
+<strong>Verification:</strong>
+• Determine primary payer (Auto vs Health)
+• No-fault states → Auto pays first
+• At-fault states → Based on responsible party
+`,
+
+"WC": `
+<strong>Workers' Compensation Eligibility:</strong>
+• Injury must occur during job duties
+
+<strong>Required Info:</strong>
+• Claim number
+• Employer name
+• Adjuster or TPA
+• Date of injury
+
+<strong>Coverage Notes:</strong>
+• WC pays 100% for approved injuries
+• No copay or deductible
+• Pre-authorization required for imaging, PT/OT, surgeries
+`,
+
+"COBRA": `
+<strong>COBRA Eligibility:</strong>
+• Job loss or reduction in work hours
+• Divorce, death of employee, or dependents aging out
+
+<strong>Coverage Duration:</strong>
+• 18 months standard
+• 29 months with disability
+• 36 months for dependents
+
+<strong>Notes:</strong>
+• Patient pays full premium + fees
+• Same coverage as employer group plan
+`,
+
+"BCBS": `
+<strong>BCBS Eligibility:</strong>
+
+<strong>Home Plan:</strong>
+• State where insurance was purchased
+• Identified using the 3-letter prefix
+
+<strong>Local (Host) Plan:</strong>
+• State where provider treats patient
+• Handles eligibility, authorization & claims
+
+<strong>Plan Types:</strong>
+• PPO
+• HMO
+• BlueCard PPO (out-of-state)
+• Federal BCBS (FEP)
+
+<strong>Verification:</strong>
+• Prefix determines routing
+• Use BCBS portal for out-of-area members
+`
+};
+
+// SEARCH (deep search)
+function searchEligibility() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    document.querySelectorAll(".tile").forEach(tile => {
+        let key = tile.dataset.key;
+        let text = (key + " " + details[key]).toLowerCase();
+        tile.style.display = text.includes(input) ? "block" : "none";
+    });
+}
+
+// OPEN MODAL
+document.querySelectorAll(".tile").forEach(tile => {
+    tile.addEventListener("click", () => {
+        let key = tile.dataset.key;
+        document.getElementById("detailTitle").innerText = key;
+        document.getElementById("detailDesc").innerHTML = details[key];
+        document.getElementById("detailModal").style.display = "flex";
+    });
+});
+
+// CLOSE MODAL
+document.getElementById("closeBtn").onclick = () => {
+    document.getElementById("detailModal").style.display = "none";
+};
+</script>
+
+</body>
+</html>
